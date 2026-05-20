@@ -3,10 +3,12 @@ import {
   loginController,
   signupController,
 } from "../controllers/auth.controller.js";
+import { authRateLimiter } from "../middleware/rateLimiter.middleware.js";
 
 const router = Router();
 
-router.post("/signup", signupController);
-router.post("/login", loginController);
+// Apply rate limiting to auth routes
+router.post("/signup", authRateLimiter, signupController);
+router.post("/login", authRateLimiter, loginController);
 
 export default router;

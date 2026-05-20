@@ -1,15 +1,20 @@
-import { Router } from 'express';
-import { authenticate } from '../middleware/auth.middleware.js';
-import { requireRole } from '../middleware/rbac.middleware.js';
-import { getDashboardController, getArticleAnalyticsController } from '../controllers/analytics.controller.js';
+import { Router } from "express";
+import {
+  getArticleAnalyticsController,
+  getDashboardController,
+} from "../controllers/analytics.controller.js";
+import { authenticate } from "../middleware/auth.middleware.js";
+import { apiRateLimiter } from "../middleware/rateLimiter.middleware.js";
+import { requireRole } from "../middleware/rbac.middleware.js";
 
 const router = Router();
 
-// All analytics routes require authentication and author role
+// Apply general rate limiting to analytics routes
+router.use(apiRateLimiter);
 router.use(authenticate);
-router.use(requireRole(['author']));
+router.use(requireRole(["author"]));
 
-router.get('/dashboard', getDashboardController);
-router.get('/articles/:id/analytics', getArticleAnalyticsController);
+router.get("/dashboard", getDashboardController);
+router.get("/articles/:id/analytics", getArticleAnalyticsController);
 
 export default router;

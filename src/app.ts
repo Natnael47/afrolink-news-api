@@ -7,9 +7,13 @@ import express, {
 } from "express";
 import helmet from "helmet";
 import morgan from "morgan";
+import {
+  apiRateLimiter,
+  authRateLimiter,
+} from "./middleware/rateLimiter.middleware.js";
+import analyticsRoutes from "./routes/analytics.routes.js";
 import articleRoutes from "./routes/article.routes.js";
 import authRoutes from "./routes/auth.routes.js";
-import analyticsRoutes from "./routes/analytics.routes.js";
 
 // Load environment variables
 dotenv.config();
@@ -17,17 +21,22 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(helmet()); // Security headers
-app.use(cors()); // Enable CORS
-app.use(express.json()); // Parse JSON bodies
-app.use(morgan("dev")); // Logging
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
+app.use(morgan("dev"));
+
+// Apply different rate limiters to different route groups
+app.use("/api/auth", authRateLimiter);
+app.use("/api/articles", apiRateLimiter);
+app.use("/api/author", apiRateLimiter);
 
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/articles", articleRoutes);
-app.use('/api/author', analyticsRoutes);
+app.use("/api/author", analyticsRoutes);
 
-// Health check endpoint
+// Health check endpoint (no rate limiting)
 app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({
     Success: true,
@@ -50,19 +59,7 @@ app.get("/", (req: Request, res: Response) => {
   });
 });
 
-// TODO: Import routes here (will add after creating them)
-// import authRoutes from './routes/auth.routes.js';
-// import articleRoutes from './routes/article.routes.js';
-// import readerRoutes from './routes/reader.routes.js';
-// import analyticsRoutes from './routes/analytics.routes.js';
-
-// TODO: Use routes here
-// app.use('/api/auth', authRoutes);
-// app.use('/api/articles', articleRoutes);
-// app.use('/api/reader', readerRoutes);
-// app.use('/api/author', analyticsRoutes);
-
-// 404 handler for undefined routes
+// 404 handler
 app.use((req: Request, res: Response) => {
   res.status(404).json({
     Success: false,
@@ -72,10 +69,9 @@ app.use((req: Request, res: Response) => {
   });
 });
 
-// Global error handling middleware
+// Global error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error("Error:", err.stack);
-
   res.status(err.status || 500).json({
     Success: false,
     Message: err.message || "Internal server error",
@@ -84,7 +80,6 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// Start server only if this file is run directly (not imported in tests)
 const PORT = process.env.PORT || 3000;
 
 if (process.env.NODE_ENV !== "test") {

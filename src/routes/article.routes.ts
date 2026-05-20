@@ -1,25 +1,53 @@
-import { Router } from 'express';
-import { authenticate } from '../middleware/auth.middleware.js';
-import { requireRole } from '../middleware/rbac.middleware.js';
+import { Router } from "express";
 import {
   createArticleController,
-  getMyArticlesController,
-  updateArticleController,
   deleteArticleController,
   getAllPublicArticlesController,
-  getArticleByIdController
-} from '../controllers/article.controller.js';
+  getArticleByIdController,
+  getMyArticlesController,
+  updateArticleController,
+} from "../controllers/article.controller.js";
+import { authenticate } from "../middleware/auth.middleware.js";
+import {
+  apiRateLimiter,
+  publicReadRateLimiter,
+} from "../middleware/rateLimiter.middleware.js";
+import { requireRole } from "../middleware/rbac.middleware.js";
 
 const router = Router();
 
-// Public routes
-router.get('/', getAllPublicArticlesController);
-router.get('/public/:id', getArticleByIdController);
+// Public routes with read rate limiting
+router.get("/", apiRateLimiter, getAllPublicArticlesController);
+router.get("/public/:id", publicReadRateLimiter, getArticleByIdController);
 
-// Author-only routes
-router.post('/', authenticate, requireRole(['author']), createArticleController);
-router.get('/me', authenticate, requireRole(['author']), getMyArticlesController);
-router.put('/:id', authenticate, requireRole(['author']), updateArticleController);
-router.delete('/:id', authenticate, requireRole(['author']), deleteArticleController);
+// Author-only routes (no read rate limiting for authors creating/updating)
+router.post(
+  "/",
+  authenticate,
+  requireRole(["author"]),
+  apiRateLimiter,
+  createArticleController,
+);
+router.get(
+  "/me",
+  authenticate,
+  requireRole(["author"]),
+  apiRateLimiter,
+  getMyArticlesController,
+);
+router.put(
+  "/:id",
+  authenticate,
+  requireRole(["author"]),
+  apiRateLimiter,
+  updateArticleController,
+);
+router.delete(
+  "/:id",
+  authenticate,
+  requireRole(["author"]),
+  apiRateLimiter,
+  deleteArticleController,
+);
 
 export default router;
