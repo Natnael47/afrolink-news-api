@@ -10,8 +10,10 @@
     "start": "node dist/app.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "test": "jest",
-    "test:coverage": "jest --coverage"
+    "test": "cross-env NODE_ENV=test jest --runInBand",
+    "test:unit": "cross-env NODE_ENV=test jest --runInBand --testNamePattern=unit",
+    "test:watch": "cross-env NODE_ENV=test jest --watch",
+    "test:coverage": "cross-env NODE_ENV=test jest --coverage"
   },
   "repository": {
     "type": "git",
@@ -38,6 +40,7 @@
     "@types/pg": "^8.20.0",
     "@types/redis": "^4.0.10",
     "@types/supertest": "^7.2.0",
+    "cross-env": "^10.1.0",
     "jest": "^30.4.2",
     "nodemon": "^3.1.14",
     "prisma": "^7.8.0",
