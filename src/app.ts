@@ -9,6 +9,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import articleRoutes from "./routes/article.routes.js";
 import authRoutes from "./routes/auth.routes.js";
+import analyticsRoutes from "./routes/analytics.routes.js";
 
 // Load environment variables
 dotenv.config();
@@ -24,6 +25,7 @@ app.use(morgan("dev")); // Logging
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/articles", articleRoutes);
+app.use('/api/author', analyticsRoutes);
 
 // Health check endpoint
 app.get("/health", (req: Request, res: Response) => {

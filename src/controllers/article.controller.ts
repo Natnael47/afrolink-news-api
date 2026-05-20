@@ -12,6 +12,7 @@ import {
   getMyArticles,
   updateArticle,
 } from "../services/article.service.js";
+import { trackArticleRead } from "../services/readLog.service.js";
 import {
   errorResponse,
   paginatedResponse,
@@ -88,11 +89,11 @@ export const updateArticleController = async (req: Request, res: Response) => {
         .json(errorResponse("Article ID is required", ["Missing article ID"]));
     }
 
+    const articleId = typeof id === "string" ? id : id[0];
     const authorId = req.user!.id;
     const validatedData = updateArticleSchema.parse(req.body);
 
-    // Use id directly with ! to tell TypeScript it's definitely a string
-    const result = await updateArticle(id!, authorId, validatedData);
+    const result = await updateArticle(articleId, authorId, validatedData);
 
     if (result.error) {
       return res.status(result.status || 400).json(result.response);
@@ -116,15 +117,14 @@ export const updateArticleController = async (req: Request, res: Response) => {
 export const deleteArticleController = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
-    // Fix: Check if id exists and ensure it's a string
+
     if (!id) {
       return res
         .status(400)
         .json(errorResponse("Article ID is required", ["Missing article ID"]));
     }
-    // Ensure we have a string, not an array
-    const articleId: string = Array.isArray(id) ? id[0] : id;
 
+    const articleId = typeof id === "string" ? id : id[0];
     const authorId = req.user!.id;
 
     const result = await deleteArticle(articleId, authorId);
@@ -178,22 +178,36 @@ export const getAllPublicArticlesController = async (
 export const getArticleByIdController = async (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
-    // Fix: Check if id exists and ensure it's a string
+
     if (!id) {
       return res
         .status(400)
         .json(errorResponse("Article ID is required", ["Missing article ID"]));
     }
-    // Ensure we have a string, not an array
-    const articleId: string = Array.isArray(id) ? id[0] : id;
 
+    const articleId = typeof id === "string" ? id : id[0];
+
+    // Get the article first
     const result = await getArticleById(articleId);
 
-    if (result.error) {
-      return res.status(result.status || 400).json(result.response);
+    if (result.error || !result.article) {
+      return res
+        .status(result.status || 404)
+        .json(
+          result.response ??
+            errorResponse("Article not found", ["Article not found"]),
+        );
     }
 
-    res.json(successResponse("Article retrieved successfully", result.article));
+    const article = result.article;
+
+    // Track the read (only for published articles)
+    if (article.status === "published") {
+      const readerId = req.user?.id; // Will be undefined if not logged in
+      await trackArticleRead(articleId, readerId);
+    }
+
+    res.json(successResponse("Article retrieved successfully", article));
   } catch (error) {
     console.error("Get article by id error:", error);
     res
