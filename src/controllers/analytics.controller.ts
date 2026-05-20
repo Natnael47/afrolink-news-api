@@ -30,17 +30,16 @@ export const getArticleAnalyticsController = async (
   try {
     const { id } = req.params;
 
-    // FIX: Check if id exists
     if (!id) {
       return res
         .status(400)
         .json(errorResponse("Article ID is required", ["Missing article ID"]));
     }
 
-    // FIX: Ensure articleId is a string
+    
     const articleId = Array.isArray(id) ? id[0] : id;
 
-    // FIX: Check if articleId is valid
+   
     if (!articleId) {
       return res
         .status(400)

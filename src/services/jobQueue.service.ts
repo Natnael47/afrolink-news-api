@@ -1,24 +1,20 @@
 import Queue from "bull";
 import { prisma } from "../lib/prisma.js";
 
-// Create a queue for analytics processing
 const analyticsQueue = new Queue(
   "analytics",
   process.env.REDIS_URL || "redis://localhost:6379",
 );
 
-// Process jobs from the queue
 analyticsQueue.process(async (job) => {
   const { date } = job.data;
   console.log(`📊 Processing analytics for date: ${date}`);
 
   try {
-    // Create date range for the entire day (GMT)
     const startDate = new Date(date);
     const endDate = new Date(date);
     endDate.setUTCDate(endDate.getUTCDate() + 1);
 
-    // Aggregate reads for each article on the given date
     const aggregates = await prisma.readLog.groupBy({
       by: ["articleId"],
       where: {
@@ -34,7 +30,6 @@ analyticsQueue.process(async (job) => {
 
     console.log(`📊 Found ${aggregates.length} articles with reads on ${date}`);
 
-    // Upsert into DailyAnalytics
     for (const agg of aggregates) {
       await prisma.dailyAnalytics.upsert({
         where: {
@@ -64,7 +59,6 @@ analyticsQueue.process(async (job) => {
   }
 });
 
-// Schedule daily job at midnight GMT
 export const scheduleDailyAnalytics = () => {
   const scheduleNextJob = () => {
     const now = new Date();
@@ -87,7 +81,6 @@ export const scheduleDailyAnalytics = () => {
       analyticsQueue.add({ date: today });
       console.log(`⏰ Scheduled analytics job for ${today}`);
 
-      // Schedule next day
       scheduleNextJob();
     }, delay);
   };
@@ -96,7 +89,6 @@ export const scheduleDailyAnalytics = () => {
   console.log("📅 Daily analytics scheduler started");
 };
 
-// Process yesterday's data when server starts
 export const processYesterdayAnalytics = async () => {
   const yesterday = new Date();
   yesterday.setUTCDate(yesterday.getUTCDate() - 1);
@@ -107,7 +99,6 @@ export const processYesterdayAnalytics = async () => {
   return dateStr;
 };
 
-// Get queue status
 export const getQueueStatus = async () => {
   const [waiting, active, completed, failed] = await Promise.all([
     analyticsQueue.getWaitingCount(),

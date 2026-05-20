@@ -4,7 +4,6 @@ export const trackArticleRead = async (
   articleId: string,
   readerId?: string,
 ) => {
-  // Create a read log entry
   const readLog = await prisma.readLog.create({
     data: {
       articleId: articleId,

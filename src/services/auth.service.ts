@@ -5,7 +5,7 @@ import { generateToken } from "../utils/jwt.util.js";
 import { errorResponse } from "../utils/response.util.js";
 
 export const signup = async (userData: SignupInput) => {
-  // Check if email exists
+
   const existingUser = await prisma.user.findUnique({
     where: { email: userData.email },
   });

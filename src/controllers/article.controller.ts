@@ -187,7 +187,6 @@ export const getArticleByIdController = async (req: Request, res: Response) => {
 
     const articleId = typeof id === "string" ? id : id[0];
 
-    // Get the article first
     const result = await getArticleById(articleId);
 
     if (result.error || !result.article) {
@@ -201,9 +200,9 @@ export const getArticleByIdController = async (req: Request, res: Response) => {
 
     const article = result.article;
 
-    // Track the read (only for published articles)
+   
     if (article.status === "published") {
-      const readerId = req.user?.id; // Will be undefined if not logged in
+      const readerId = req.user?.id; 
       await trackArticleRead(articleId, readerId);
     }
 

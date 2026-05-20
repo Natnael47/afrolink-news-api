@@ -7,34 +7,36 @@ import express, {
 } from "express";
 import helmet from "helmet";
 import morgan from "morgan";
+import {
+  apiRateLimiter,
+  authRateLimiter,
+} from "./middleware/rateLimiter.middleware.js";
+import analyticsRoutes from "./routes/analytics.routes.js";
 import articleRoutes from "./routes/article.routes.js";
 import authRoutes from "./routes/auth.routes.js";
-import analyticsRoutes from "./routes/analytics.routes.js";
-import { apiRateLimiter, authRateLimiter } from "./middleware/rateLimiter.middleware.js";
-import { scheduleDailyAnalytics, processYesterdayAnalytics, getQueueStatus } from "./services/jobQueue.service.js";
+import {
+  getQueueStatus,
+  processYesterdayAnalytics,
+  scheduleDailyAnalytics,
+} from "./services/jobQueue.service.js";
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
 
-// Middleware
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
-// Apply different rate limiters to different route groups
 app.use("/api/auth", authRateLimiter);
 app.use("/api/articles", apiRateLimiter);
 app.use("/api/author", apiRateLimiter);
 
-// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/articles", articleRoutes);
-app.use('/api/author', analyticsRoutes);
+app.use("/api/author", analyticsRoutes);
 
-// Health check endpoint (no rate limiting)
 app.get("/health", (req: Request, res: Response) => {
   res.status(200).json({
     Success: true,
@@ -44,7 +46,6 @@ app.get("/health", (req: Request, res: Response) => {
   });
 });
 
-// Queue status endpoint (for monitoring)
 app.get("/queue/status", async (req: Request, res: Response) => {
   try {
     const status = await getQueueStatus();
@@ -52,19 +53,18 @@ app.get("/queue/status", async (req: Request, res: Response) => {
       Success: true,
       Message: "Queue status retrieved",
       Object: status,
-      Errors: null
+      Errors: null,
     });
   } catch (error) {
     res.status(500).json({
       Success: false,
       Message: "Failed to get queue status",
       Object: null,
-      Errors: [String(error)]
+      Errors: [String(error)],
     });
   }
 });
 
-// Root endpoint
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({
     Success: true,
@@ -98,35 +98,33 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-// Start server and initialize job queue
 const PORT = process.env.PORT || 3000;
 
 if (process.env.NODE_ENV !== "test") {
-  // Start the server
   app.listen(PORT, async () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📝 Environment: ${process.env.NODE_ENV || "development"}`);
-    console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-    
-    // Initialize job queue (only if Redis is configured)
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
+
     if (process.env.REDIS_URL) {
       try {
-        console.log('🔄 Initializing analytics job queue...');
+        console.log("🔄 Initializing analytics job queue...");
         await processYesterdayAnalytics();
         scheduleDailyAnalytics();
-        console.log('✅ Analytics job queue started successfully');
-        
-        // Show queue status after 2 seconds
+        console.log("✅ Analytics job queue started successfully");
+
         setTimeout(async () => {
           const status = await getQueueStatus();
-          console.log('📊 Queue status:', status);
+          console.log("📊 Queue status:", status);
         }, 2000);
       } catch (error) {
-        console.warn('⚠️ Redis connection failed. Analytics job queue disabled.');
-        console.warn('   Make sure Redis is running on', process.env.REDIS_URL);
+        console.warn(
+          "⚠️ Redis connection failed. Analytics job queue disabled.",
+        );
+        console.warn("   Make sure Redis is running on", process.env.REDIS_URL);
       }
     } else {
-      console.log('ℹ️ REDIS_URL not set. Analytics job queue disabled.');
+      console.log("ℹ️ REDIS_URL not set. Analytics job queue disabled.");
     }
   });
 }

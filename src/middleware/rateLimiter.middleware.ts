@@ -1,9 +1,8 @@
 import rateLimit from "express-rate-limit";
 
-// Strict rate limiter for auth routes (prevent brute force)
 export const authRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per 15 minutes
+  windowMs: 15 * 60 * 1000, 
+  max: 5, 
   message: {
     Success: false,
     Message: "Too many authentication attempts",
@@ -15,7 +14,6 @@ export const authRateLimiter = rateLimit({
   skipSuccessfulRequests: true,
 });
 
-// Rate limiter for article reads
 export const readRateLimiter = rateLimit({
   windowMs: 10 * 1000,
   max: 100,
@@ -29,7 +27,6 @@ export const readRateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Stricter limiter for non-authenticated users
 export const publicReadRateLimiter = rateLimit({
   windowMs: 10 * 1000,
   max: 20,
@@ -45,7 +42,6 @@ export const publicReadRateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// General API rate limiter
 export const apiRateLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 200,

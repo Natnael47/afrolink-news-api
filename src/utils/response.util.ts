@@ -1,5 +1,3 @@
-// src/utils/response.util.ts
-
 export interface ApiResponse {
   Success: boolean;
   Message: string;

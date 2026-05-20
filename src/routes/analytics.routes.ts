@@ -19,7 +19,6 @@ router.use(requireRole(["author"]));
 router.get("/dashboard", getDashboardController);
 router.get("/articles/:id/analytics", getArticleAnalyticsController);
 
-// Debug endpoint to check read logs (remove in production)
 router.get("/debug/read-logs", async (req, res) => {
   try {
     const readLogs = await prisma.readLog.findMany({

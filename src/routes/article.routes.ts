@@ -20,7 +20,6 @@ const router = Router();
 router.get("/", apiRateLimiter, getAllPublicArticlesController);
 router.get("/public/:id", publicReadRateLimiter, getArticleByIdController);
 
-// Author-only routes (no read rate limiting for authors creating/updating)
 router.post(
   "/",
   authenticate,

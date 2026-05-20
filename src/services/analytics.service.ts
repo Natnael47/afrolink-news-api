@@ -1,7 +1,6 @@
 import { prisma } from "../lib/prisma.js";
 
 export const getAuthorDashboard = async (authorId: string) => {
-  // Get all articles by this author
   const articles = await prisma.article.findMany({
     where: {
       authorId: authorId,
@@ -21,7 +20,6 @@ export const getAuthorDashboard = async (authorId: string) => {
     },
   });
 
-  // Calculate total reads across all articles
   const totalReads = articles.reduce(
     (sum, article) => sum + article.readLogs.length,
     0,
@@ -45,7 +43,6 @@ export const getAuthorDashboard = async (authorId: string) => {
     },
   });
 
-  // Get top performing article - FIXED
   let topArticle = null;
   if (articles.length > 0) {
     topArticle = articles.reduce((top, article) => {
@@ -76,7 +73,6 @@ export const getArticleAnalytics = async (
   articleId: string,
   authorId: string,
 ) => {
-  // Verify article belongs to author
   const article = await prisma.article.findFirst({
     where: {
       id: articleId,

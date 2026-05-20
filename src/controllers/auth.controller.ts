@@ -36,7 +36,6 @@ export const loginController = async (req: Request, res: Response) => {
   try {
     const validatedData = loginSchema.parse(req.body);
 
-    // ✅ FIX: explicitly ensure TS knows these are strings
     const { email, password } = validatedData as {
       email: string;
       password: string;

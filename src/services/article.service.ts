@@ -73,7 +73,7 @@ export const updateArticle = async (
   authorId: string,
   data: UpdateArticleInput,
 ) => {
-  // Check if article exists and belongs to author
+
   const existingArticle = await prisma.article.findFirst({
     where: {
       id: articleId,
@@ -117,7 +117,7 @@ export const updateArticle = async (
 };
 
 export const deleteArticle = async (articleId: string, authorId: string) => {
-  // Check if article exists and belongs to author
+ 
   const existingArticle = await prisma.article.findFirst({
     where: {
       id: articleId,

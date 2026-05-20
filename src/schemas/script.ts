@@ -3,7 +3,6 @@ import { prisma } from "../lib/prisma";
 async function main() {
   console.log("🌱 Seeding database...");
 
-  // 1. Create Authors and Readers
   const author1 = await prisma.user.create({
     data: {
       name: "Daniel Tesfaye",
@@ -42,7 +41,6 @@ async function main() {
 
   console.log("👤 Users created");
 
-  // 2. Create Articles with relations
   const article1 = await prisma.article.create({
     data: {
       title: "Ethiopia's Tech Industry is Growing Rapidly",
@@ -78,7 +76,6 @@ async function main() {
 
   console.log("📰 Articles created");
 
-  // 3. Create Read Logs (simulate user engagement)
   await prisma.readLog.createMany({
     data: [
       {
@@ -106,7 +103,6 @@ async function main() {
 
   console.log("📖 Read logs created");
 
-  // 4. Create Daily Analytics
   const today = new Date();
 
   await prisma.dailyAnalytics.createMany({
@@ -132,7 +128,6 @@ async function main() {
 
   console.log("📊 Daily analytics created");
 
-  // 5. Fetch everything for verification
   const articles = await prisma.article.findMany({
     include: {
       author: true,
